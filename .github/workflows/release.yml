@@ -70,7 +70,7 @@ jobs:
           tar czf "${name}.tar.gz" "$name"
           echo "ASSET=${name}.tar.gz" >> $GITHUB_ENV
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: shellex-${{ matrix.target }}
           path: ${{ env.ASSET }}
@@ -82,7 +82,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: artifacts
           merge-multiple: true
