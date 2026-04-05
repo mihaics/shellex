@@ -53,8 +53,4 @@ impl OllamaClient {
 
         Ok(response.response)
     }
-
-    pub fn url_display(&self) -> String {
-        format!("{}:{}", self.host, self.port)
-    }
 }
