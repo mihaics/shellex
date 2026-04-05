@@ -169,6 +169,20 @@ async fn check_command_exists(command: &str) {
         return;
     }
 
+    // Shell builtins won't be found by `which` — skip them
+    const BUILTINS: &[&str] = &[
+        "cd", "export", "source", "alias", "unalias", "set", "unset",
+        "echo", "printf", "read", "eval", "exec", "exit", "return",
+        "break", "continue", "shift", "trap", "type", "hash",
+        "ulimit", "umask", "wait", "jobs", "fg", "bg", "disown",
+        "pushd", "popd", "dirs", "builtin", "command", "declare",
+        "local", "readonly", "let", "test", "[", ".",
+    ];
+
+    if BUILTINS.contains(&first_token) {
+        return;
+    }
+
     let result = tokio::process::Command::new("which")
         .arg(first_token)
         .output()
