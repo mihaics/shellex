@@ -3,6 +3,11 @@ name = "shellex"
 version = "0.1.0"
 edition = "2021"
 description = "Translate natural-language intent to shell commands using a local LLM"
+license = "MIT"
+repository = "https://github.com/mihaics/shellex"
+readme = "README.md"
+keywords = ["cli", "shell", "llm", "ollama", "command-line"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
