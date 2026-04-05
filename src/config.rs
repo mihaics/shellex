@@ -20,7 +20,7 @@ impl Default for Config {
             ollama_url: "http://localhost:11434".to_string(),
             yes_warned: false,
             dangerous_patterns: vec![
-                r"rm\s+(-[^\s]*)?\s*/".to_string(),
+                r"rm\s+(\S+\s+)+/".to_string(),
                 r"mkfs".to_string(),
                 r"dd\s+.*of=/dev/".to_string(),
                 r":\(\)\{.*\|.*&\}.*;:".to_string(),
