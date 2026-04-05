@@ -22,26 +22,21 @@ jobs:
           # Linux x86_64
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-            archive: tar.gz
           # Linux x86_64 (musl, static binary)
           - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
-            archive: tar.gz
           # Linux ARM64
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
-            archive: tar.gz
           # macOS x86_64 (Intel)
           - target: x86_64-apple-darwin
             os: macos-latest
-            archive: tar.gz
           # macOS ARM64 (Apple Silicon)
           - target: aarch64-apple-darwin
             os: macos-latest
-            archive: tar.gz
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -51,11 +46,11 @@ jobs:
         with:
           key: ${{ matrix.target }}
 
-      - name: Install cross-compilation tools
+      - name: Install musl tools
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: sudo apt-get update && sudo apt-get install -y musl-tools
 
-      - name: Install cross-compilation tools (ARM64)
+      - name: Install ARM64 cross-compiler
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: |
           sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
@@ -71,7 +66,7 @@ jobs:
           name="shellex-${tag}-${{ matrix.target }}"
           mkdir -p "$name"
           cp "target/${{ matrix.target }}/release/shellex" "$name/"
-          cp README.md LICENSE* 2>/dev/null || true
+          cp README.md LICENSE 2>/dev/null || true
           tar czf "${name}.tar.gz" "$name"
           echo "ASSET=${name}.tar.gz" >> $GITHUB_ENV
 
@@ -85,7 +80,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/download-artifact@v4
         with:
