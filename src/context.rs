@@ -113,18 +113,19 @@ pub async fn check_tools(tools: &[&str]) -> Vec<String> {
 }
 
 pub fn format_context_block(
-    os: &str,
-    shell: &str,
+    _os: &str,
+    _shell: &str,
     package_manager: &str,
     tools: &[&str],
 ) -> String {
-    let mut lines = Vec::new();
-    lines.push(format!("OS: {}", os));
-    lines.push(format!("Shell: {}", shell));
-    lines.push(format!("Package manager: {}", package_manager));
+    let mut lines = vec![
+        format!("Package manager: {}", package_manager),
+    ];
+
     if !tools.is_empty() {
         lines.push(format!("Available tools: {}", tools.join(", ")));
     }
+
     lines.join("\n")
 }
 
@@ -170,16 +171,16 @@ mod tests {
             "apt",
             &["git", "docker", "cargo"],
         );
-        assert!(block.contains("OS: Ubuntu 24.04"));
-        assert!(block.contains("Shell: /bin/bash"));
         assert!(block.contains("Package manager: apt"));
         assert!(block.contains("Available tools: git, docker, cargo"));
+        assert!(!block.contains("OS:"));
+        assert!(!block.contains("Shell:"));
     }
 
     #[test]
     fn test_format_context_block_no_tools() {
         let block = format_context_block("Linux", "/bin/sh", "apt", &[]);
-        assert!(block.contains("OS: Linux"));
+        assert!(block.contains("Package manager: apt"));
         assert!(!block.contains("Available tools"));
     }
 

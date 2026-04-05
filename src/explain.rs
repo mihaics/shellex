@@ -170,6 +170,20 @@ pub fn tokenize(input: &str) -> Vec<String> {
                 continue;
             }
 
+            // `<` input redirect — but skip `<<` heredocs (keep them as-is)
+            '<' if i + 1 < len && chars[i + 1] == '<' => {
+                buf.push('<');
+                buf.push('<');
+                i += 2;
+                continue;
+            }
+
+            // `<` single input redirect
+            '<' => {
+                flush!();
+                tokens.push("<".to_string());
+            }
+
             // `>` redirect — but `2>&1` must stay with its command
             '>' => {
                 // Check for `2>&1` pattern: current buffer ends with '2'
@@ -316,6 +330,12 @@ mod tests {
     fn test_stderr_redirect() {
         let tokens = tokenize("cmd 2>&1 | grep error");
         assert_eq!(tokens, vec!["cmd 2>&1", "|", "grep error"]);
+    }
+
+    #[test]
+    fn test_input_redirect() {
+        let tokens = tokenize("sort < input.txt");
+        assert_eq!(tokens, vec!["sort", "<", "input.txt"]);
     }
 
     #[test]

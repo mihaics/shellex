@@ -13,7 +13,7 @@ pub struct Args {
     pub explain: bool,
 
     /// Gather environment context (OS, shell, installed tools) for better results
-    #[arg(long)]
+    #[arg(long, conflicts_with = "explain")]
     pub ctx: bool,
 
     /// Skip confirmation and execute immediately (for scripting)
