@@ -1161,6 +1161,7 @@ dependencies = [
  "ollama-rs",
  "regex",
  "serde",
+ "tempfile",
  "tokio",
  "toml",
 ]
