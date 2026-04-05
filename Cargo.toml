@@ -1,0 +1,16 @@
+[package]
+name = "shellex"
+version = "0.1.0"
+edition = "2021"
+description = "Translate natural-language intent to shell commands using a local LLM"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+ollama-rs = { version = "0.2", features = ["chat-history"] }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+regex = "1"
+crossterm = "0.28"
+dirs = "5"
+anyhow = "1"
