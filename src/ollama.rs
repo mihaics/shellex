@@ -38,14 +38,12 @@ impl OllamaClient {
         let request = GenerationRequest::new(self.model.clone(), user_prompt.to_string())
             .system(system_prompt.to_string());
 
-        let response = self
-            .client
-            .generate(request)
-            .await
-            .with_context(|| format!(
+        let response = self.client.generate(request).await.with_context(|| {
+            format!(
                 "Error: Cannot connect to Ollama at {}:{}. Is it running? (ollama serve)",
                 self.host, self.port
-            ))?;
+            )
+        })?;
 
         if response.response.trim().is_empty() {
             bail!("Error: Model returned empty response. Try a different model or rephrase.");

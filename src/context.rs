@@ -118,9 +118,7 @@ pub fn format_context_block(
     package_manager: &str,
     tools: &[&str],
 ) -> String {
-    let mut lines = vec![
-        format!("Package manager: {}", package_manager),
-    ];
+    let mut lines = vec![format!("Package manager: {}", package_manager)];
 
     if !tools.is_empty() {
         lines.push(format!("Available tools: {}", tools.join(", ")));

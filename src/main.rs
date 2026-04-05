@@ -27,10 +27,7 @@ async fn run() -> Result<()> {
     let args = Args::parse();
 
     // Load config
-    let config_path = args
-        .config
-        .clone()
-        .unwrap_or_else(Config::default_path);
+    let config_path = args.config.clone().unwrap_or_else(Config::default_path);
     let mut config = Config::load_or_create(&config_path)?;
 
     // Resolve model (CLI flag overrides config)
@@ -171,12 +168,10 @@ async fn check_command_exists(command: &str) {
 
     // Shell builtins won't be found by `which` — skip them
     const BUILTINS: &[&str] = &[
-        "cd", "export", "source", "alias", "unalias", "set", "unset",
-        "echo", "printf", "read", "eval", "exec", "exit", "return",
-        "break", "continue", "shift", "trap", "type", "hash",
-        "ulimit", "umask", "wait", "jobs", "fg", "bg", "disown",
-        "pushd", "popd", "dirs", "builtin", "command", "declare",
-        "local", "readonly", "let", "test", "[", ".",
+        "cd", "export", "source", "alias", "unalias", "set", "unset", "echo", "printf", "read",
+        "eval", "exec", "exit", "return", "break", "continue", "shift", "trap", "type", "hash",
+        "ulimit", "umask", "wait", "jobs", "fg", "bg", "disown", "pushd", "popd", "dirs",
+        "builtin", "command", "declare", "local", "readonly", "let", "test", "[", ".",
     ];
 
     if BUILTINS.contains(&first_token) {
@@ -190,7 +185,10 @@ async fn check_command_exists(command: &str) {
 
     if let Ok(output) = result {
         if !output.status.success() {
-            eprintln!("Warning: Command '{}' not found on this system.", first_token);
+            eprintln!(
+                "Warning: Command '{}' not found on this system.",
+                first_token
+            );
         }
     }
 }

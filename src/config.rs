@@ -30,10 +30,23 @@ impl Default for Config {
                 r"curl.*\|.*sh".to_string(),
             ],
             ctx_tools: vec![
-                "git".into(), "docker".into(), "kubectl".into(), "systemctl".into(),
-                "npm".into(), "python3".into(), "pip".into(), "cargo".into(), "go".into(),
-                "apt".into(), "dnf".into(), "pacman".into(), "brew".into(),
-                "jq".into(), "ripgrep".into(), "fd".into(), "tmux".into(),
+                "git".into(),
+                "docker".into(),
+                "kubectl".into(),
+                "systemctl".into(),
+                "npm".into(),
+                "python3".into(),
+                "pip".into(),
+                "cargo".into(),
+                "go".into(),
+                "apt".into(),
+                "dnf".into(),
+                "pacman".into(),
+                "brew".into(),
+                "jq".into(),
+                "ripgrep".into(),
+                "fd".into(),
+                "tmux".into(),
             ],
             custom_prompt: String::new(),
         }
@@ -47,10 +60,18 @@ impl Config {
     }
 
     pub fn load_from(path: &Path) -> Result<Self> {
-        let content = fs::read_to_string(path)
-            .with_context(|| format!("Error: Invalid config at {}. Delete it to regenerate defaults.", path.display()))?;
-        let config: Config = toml::from_str(&content)
-            .with_context(|| format!("Error: Invalid config at {}. Delete it to regenerate defaults.", path.display()))?;
+        let content = fs::read_to_string(path).with_context(|| {
+            format!(
+                "Error: Invalid config at {}. Delete it to regenerate defaults.",
+                path.display()
+            )
+        })?;
+        let config: Config = toml::from_str(&content).with_context(|| {
+            format!(
+                "Error: Invalid config at {}. Delete it to regenerate defaults.",
+                path.display()
+            )
+        })?;
         Ok(config)
     }
 
@@ -98,7 +119,10 @@ mod tests {
         let deserialized: Config = toml::from_str(&serialized).unwrap();
         assert_eq!(config.model, deserialized.model);
         assert_eq!(config.ollama_url, deserialized.ollama_url);
-        assert_eq!(config.dangerous_patterns.len(), deserialized.dangerous_patterns.len());
+        assert_eq!(
+            config.dangerous_patterns.len(),
+            deserialized.dangerous_patterns.len()
+        );
         assert_eq!(config.ctx_tools.len(), deserialized.ctx_tools.len());
     }
 
@@ -107,14 +131,18 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("config.toml");
         let mut file = std::fs::File::create(&path).unwrap();
-        write!(file, r#"
+        write!(
+            file,
+            r#"
 model = "gemma:7b"
 ollama_url = "http://myhost:11434"
 yes_warned = true
 dangerous_patterns = ["rm -rf"]
 ctx_tools = ["git"]
 custom_prompt = "prefer ripgrep"
-"#).unwrap();
+"#
+        )
+        .unwrap();
 
         let config = Config::load_from(&path).unwrap();
         assert_eq!(config.model, "gemma:7b");

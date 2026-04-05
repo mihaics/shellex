@@ -18,7 +18,10 @@ async fn test_generate_returns_nonempty_response() {
         stderr
     );
 
-    assert!(!stdout.contains("```"), "Response should not contain markdown fences");
+    assert!(
+        !stdout.contains("```"),
+        "Response should not contain markdown fences"
+    );
 }
 
 #[tokio::test]
@@ -30,8 +33,5 @@ async fn test_explain_returns_explanation() {
         .unwrap();
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(
-        !stdout.trim().is_empty(),
-        "Expected non-empty explanation"
-    );
+    assert!(!stdout.trim().is_empty(), "Expected non-empty explanation");
 }

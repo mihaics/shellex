@@ -340,11 +340,7 @@ mod tests {
 
     #[test]
     fn test_format_segments() {
-        let tokens = vec![
-            "tar czf -".to_string(),
-            "|".to_string(),
-            "gzip".to_string(),
-        ];
+        let tokens = vec!["tar czf -".to_string(), "|".to_string(), "gzip".to_string()];
         let formatted = format_segments(&tokens);
         assert_eq!(formatted, "[1] tar czf -\n[2] |\n[3] gzip");
     }

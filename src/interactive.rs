@@ -32,7 +32,11 @@ pub fn prompt_command(command: &str) -> Result<UserAction> {
     terminal::disable_raw_mode()?;
 
     // Clear the hint line
-    execute!(out, cursor::MoveUp(1), terminal::Clear(ClearType::CurrentLine))?;
+    execute!(
+        out,
+        cursor::MoveUp(1),
+        terminal::Clear(ClearType::CurrentLine)
+    )?;
 
     result
 }

