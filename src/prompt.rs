@@ -61,12 +61,17 @@ pub fn parse_generate_response(response: &str) -> String {
     };
 
     // Take only the first line if multiple lines remain
-    stripped
+    let line = stripped
         .lines()
         .next()
         .unwrap_or("")
-        .trim()
-        .to_string()
+        .trim();
+
+    // Strip inline backticks (e.g. `command` → command)
+    let line = line.strip_prefix('`').unwrap_or(line);
+    let line = line.strip_suffix('`').unwrap_or(line);
+
+    line.trim().to_string()
 }
 
 #[cfg(test)]
@@ -132,5 +137,11 @@ mod tests {
     fn test_parse_response_trims_whitespace() {
         let response = "  ls -la  \n";
         assert_eq!(parse_generate_response(response), "ls -la");
+    }
+
+    #[test]
+    fn test_parse_response_strips_inline_backticks() {
+        let response = "`cd ~/Documents`";
+        assert_eq!(parse_generate_response(response), "cd ~/Documents");
     }
 }
