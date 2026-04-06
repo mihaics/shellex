@@ -19,6 +19,12 @@ Breakdown:
   [4] ssh backup@remote 'cat > /backups/logs.tar.gz' -- receive on remote, write to file
 ```
 
+## shellex-lite
+
+Don't want to install a binary? **[shellex-lite](SHELLEX-LITE.md)** is a collection of 14 shell functions (fish + bash) that call the Ollama API directly via `curl`. Zero dependencies beyond `curl`, `jq`, and a running Ollama instance.
+
+Includes `sx` (command generation), `wtf` (error explainer), `gitm` (AI commit messages), `ai` (general text transformer), `diagnose` (system health check), and more.
+
 ## Why
 
 `man` pages are comprehensive but slow. `tldr` is static and can't adapt to your OS, your installed tools, or your specific intent. shellex uses a local LLM to generate commands instantly, offline, tailored to your environment.
