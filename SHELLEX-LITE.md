@@ -78,19 +78,22 @@ git log --stat -20 | tldr
 
 Distills long command output into 3-5 bullet points.
 
-### ai — General-purpose text transformer
+### ai — LLM agent + text transformer
 
 ```bash
-# With pipe (transforms text)
+# Agent mode (no pipe) — runs commands to answer your questions
+ai "show me the content of Cargo.toml"
+ai "which version of linux am i running"
+ai "how much free disk space do i have"
+ai "what is the largest file in this directory"
+
+# Pipe mode — transforms text
 echo "hello world" | ai "translate to Romanian"
 cat README.md | ai "summarize in 3 bullets"
 git diff | ai "explain what changed"
-
-# Without pipe (answers questions)
-ai "what's the difference between TCP and UDP"
 ```
 
-The Swiss Army knife — applies any instruction to piped text, or answers questions directly.
+Two modes in one function. Without a pipe, it acts as a **mini agent**: asks the LLM what command to run, executes it, then summarizes the result. With a pipe, it transforms text. The executed command is shown in gray on stderr.
 
 ### rx — Natural language to regex
 

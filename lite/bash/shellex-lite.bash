@@ -53,23 +53,53 @@ tldr() {
     "$input"
 }
 
-# ai - General-purpose text transformer
+# ai - LLM agent: answers questions by running commands, or transforms piped text
 ai() {
   local model="${SX_MODEL:-qwen2.5-coder:7b}"
-  if [ $# -eq 0 ]; then echo "Usage: echo text | ai 'instruction'  OR  ai 'question'"; return 1; fi
+  if [ $# -eq 0 ]; then echo "Usage: ai 'question'  OR  echo text | ai 'instruction'"; return 1; fi
   local instruction="$*"
-  local input=""
-  if [ ! -t 0 ]; then input=$(cat); fi
-  if [ -n "$input" ]; then
+
+  # Pipe mode: transform text
+  if [ ! -t 0 ]; then
+    local input
+    input=$(cat)
     _ollama "$model" \
       "Apply the user's instruction to the provided text. Output ONLY the result. No explanation, no markdown fences." \
       "Instruction: $instruction
 
 Text:
 $input"
-  else
-    _ollama "$model" "Answer concisely. No markdown fences." "$instruction"
+    return
   fi
+
+  # Agent mode: run commands to answer questions
+  local cmd
+  cmd=$(_ollama "$model" \
+    "You are a shell command generator. The user asks a question. You MUST output a shell command to answer it. Always prefer running a real command over guessing. Output ONLY the command — no explanation, no markdown, no backticks. Only output NONE if the question is purely conceptual." \
+    "OS: $(uname -s) Shell: $SHELL
+Question: $instruction" | head -1 \
+    | sed 's/^```[a-z]*//;s/```$//;s/^`//;s/`$//' | xargs)
+
+  if [ -z "$cmd" ] || [ "$cmd" = "NONE" ]; then
+    _ollama "$model" "Answer concisely. No markdown fences." "$instruction"
+    return
+  fi
+
+  # Show and run the command
+  echo -e "\033[90m→ $cmd\033[0m" >&2
+  local output exit_code
+  output=$(eval "$cmd" 2>&1)
+  exit_code=$?
+  [ $exit_code -ne 0 ] && echo -e "\033[90m  (exit $exit_code)\033[0m" >&2
+
+  # Summarize the result
+  _ollama "$model" \
+    "You ran a command to answer the user's question. Give a clear, concise answer based on the output. No markdown fences. If the output is short enough, include the key data directly." \
+    "Question: $instruction
+Command: $cmd
+Exit code: $exit_code
+Output:
+$output"
 }
 
 # rx - Natural language to regex
