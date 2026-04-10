@@ -7,7 +7,8 @@ function ai --description "LLM agent: ai 'what linux version am I running' or ec
 
   # Pipe mode: transform text
   if not isatty stdin
-    set -l input (cat)
+    read -z input
+    set -l input (printf '%s' "$input" | head -100 | string collect)
     _ollama $model \
       "Apply the user's instruction to the provided text. Output ONLY the result. No explanation, no markdown fences." \
       "Instruction: $instruction

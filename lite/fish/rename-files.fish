@@ -3,7 +3,8 @@ function rename-files --description "Suggest file renames: ls *.jpg | rename-fil
   if test (count $argv) -eq 0
     echo "Usage: ls files | rename-files 'naming convention'"; return 1
   end
-  set -l input (cat)
+  read -z input
+  set -l input (printf '%s' "$input" | string collect)
   if test -z "$input"
     echo "Pipe file list via stdin"; return 1
   end
@@ -13,9 +14,9 @@ function rename-files --description "Suggest file renames: ls *.jpg | rename-fil
     "Files:
 $input
 
-Convention: $convention")
+Convention: $convention" | string collect)
 
-  echo "$cmds"
+  printf '%s\n' "$cmds"
   echo ""
   set_color yellow; echo "Run these commands? [Enter=yes, Ctrl-C=no]" >&2; set_color normal
   read confirm

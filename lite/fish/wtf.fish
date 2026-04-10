@@ -3,7 +3,8 @@ function wtf --description "Pipe error output to get an explanation: make 2>&1 |
     echo "Usage: some_command 2>&1 | wtf"; return 1
   end
   set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen3-coder")
-  set -l input (cat | head -100)
+  read -z input
+  set -l input (printf '%s' "$input" | head -100 | string collect)
   if test -z "$input"
     echo "No input received."; return 1
   end

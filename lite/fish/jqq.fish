@@ -5,10 +5,11 @@ function jqq --description "Natural language jq filter: cat data.json | jqq 'get
   end
   set -l input ""
   if not isatty stdin
-    set input (cat)
+    read -z input
+    set input (printf '%s' "$input" | string collect)
   end
   set -l user_prompt (string join " " $argv)
-  set -l sample (echo $input | head -20)
+  set -l sample (printf '%s' "$input" | head -20 | string collect)
 
   set -l filter (_ollama $model \
     "You are a jq filter generator. Output ONLY the jq filter expression, nothing else. No explanation, no markdown, no backticks." \
@@ -22,7 +23,7 @@ Query: $user_prompt" | string trim)
   end
   set_color yellow; echo "▶ jq '$filter'" >&2; set_color normal
   if test -n "$input"
-    echo $input | jq "$filter"
+    printf '%s' "$input" | jq "$filter"
   else
     echo "Filter: $filter"
   end
