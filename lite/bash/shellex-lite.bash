@@ -4,7 +4,7 @@
 #   source /path/to/shellex-lite.bash
 #
 # Config via environment variables:
-#   SX_MODEL     - Ollama model (default: qwen2.5-coder:7b)
+#   SX_MODEL     - Ollama model (default: qwen3-coder)
 #   OLLAMA_URL   - Ollama API endpoint (default: http://localhost:11434)
 #
 # Requires: curl, jq, ollama running locally
@@ -14,13 +14,13 @@ _ollama() {
   local url="${OLLAMA_URL:-http://localhost:11434}"
   jq -n --arg m "$model" --arg s "$sys" --arg p "$prompt" \
     '{model:$m, system:$s, prompt:$p, stream:false}' \
-    | curl -s "$url/api/generate" -d @- 2>/dev/null \
+    | curl -s --max-time 30 "$url/api/generate" -d @- 2>/dev/null \
     | jq -r '.response // empty'
 }
 
 # sx - Natural language to shell command
 sx() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
+  local model="${SX_MODEL:-qwen3-coder}"
   local sys="You are a shell command generator. Output ONLY the command, no explanation, no markdown, no backticks. One single command or pipeline. OS: $(uname -s) Shell: $SHELL"
   local cmd
   cmd=$(_ollama "$model" "$sys" "$*" | head -1 \
@@ -33,10 +33,10 @@ sx() {
 
 # wtf - Explain errors
 wtf() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
-  local input
-  input=$(cat)
-  if [ -z "$input" ]; then echo "Usage: some_command 2>&1 | wtf"; return 1; fi
+  if [ -t 0 ]; then echo "Usage: some_command 2>&1 | wtf"; return 1; fi
+  local model="${SX_MODEL:-qwen3-coder}"
+  local input; input=$(cat | head -100)
+  if [ -z "$input" ]; then echo "No input received."; return 1; fi
   _ollama "$model" \
     "You are a concise error diagnostician. Explain what went wrong and suggest a fix. Be brief — max 5 lines. No markdown fences." \
     "$input"
@@ -44,10 +44,10 @@ wtf() {
 
 # tldr - Summarize verbose output
 tldr() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
-  local input
-  input=$(cat)
-  if [ -z "$input" ]; then echo "Usage: some_command | tldr"; return 1; fi
+  if [ -t 0 ]; then echo "Usage: some_command | tldr"; return 1; fi
+  local model="${SX_MODEL:-qwen3-coder}"
+  local input; input=$(cat | head -100)
+  if [ -z "$input" ]; then echo "No input received."; return 1; fi
   _ollama "$model" \
     "Summarize this command output in 3-5 bullet points. Focus on what matters — status, errors, key values. No markdown fences. Use • for bullets." \
     "$input"
@@ -55,7 +55,7 @@ tldr() {
 
 # ai - LLM agent: answers questions by running commands, or transforms piped text
 ai() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
+  local model="${SX_MODEL:-qwen3-coder}"
   if [ $# -eq 0 ]; then echo "Usage: ai 'question'  OR  echo text | ai 'instruction'"; return 1; fi
   local instruction="$*"
 
@@ -85,26 +85,38 @@ Question: $instruction" | head -1 \
     return
   fi
 
-  # Show and run the command
+  # Safety check — blacklist dangerous patterns
+  local danger_patterns='rm\s+(\S+\s+)+/|mkfs|dd\s+.*of=/dev/|:\(\)\{.*\|.*&\}.*;:|chmod\s+777|>/dev/sd|wget.*\|.*sh|curl.*\|.*sh|sudo\s+rm|sudo\s+mkfs|sudo\s+dd|reboot|shutdown|kill\s+-9\s+1\b|mv\s+/\S|systemctl\s+(stop|disable|mask)|>\s*/etc/|chmod\s+[0-7]*[0-7]\s+/'
   echo -e "\033[90m→ $cmd\033[0m" >&2
+  if echo "$cmd" | grep -qE "$danger_patterns"; then
+    echo -e "\033[31m⚠ dangerous command — not auto-executing\033[0m" >&2
+    read -p "[Enter=run anyway, Ctrl-C=cancel] "
+  fi
+
   local output exit_code
   output=$(eval "$cmd" 2>&1)
   exit_code=$?
   [ $exit_code -ne 0 ] && echo -e "\033[90m  (exit $exit_code)\033[0m" >&2
 
-  # Summarize the result
-  _ollama "$model" \
-    "You ran a command to answer the user's question. Give a clear, concise answer based on the output. No markdown fences. If the output is short enough, include the key data directly." \
-    "Question: $instruction
+  # Short output — print directly; long output — cap and summarize
+  local line_count; line_count=$(echo "$output" | wc -l)
+  if [ "$line_count" -le 20 ]; then
+    echo "$output"
+  else
+    local capped; capped=$(echo "$output" | head -100)
+    _ollama "$model" \
+      "You ran a command to answer the user's question. Give a clear, concise answer based on the output. No markdown fences. If the output is short enough, include the key data directly." \
+      "Question: $instruction
 Command: $cmd
 Exit code: $exit_code
-Output:
-$output"
+Output (first 100 lines):
+$capped"
+  fi
 }
 
 # rx - Natural language to regex
 rx() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
+  local model="${SX_MODEL:-qwen3-coder}"
   if [ $# -eq 0 ]; then echo "Usage: rx 'description of pattern'"; return 1; fi
   _ollama "$model" \
     "You are a regex generator. Output ONLY the regex pattern, nothing else. No explanation, no markdown, no backticks. One single regex. Use extended regex syntax (ERE) compatible with grep -E." \
@@ -113,7 +125,7 @@ rx() {
 
 # jqq - Natural language jq queries
 jqq() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
+  local model="${SX_MODEL:-qwen3-coder}"
   if [ $# -eq 0 ]; then echo "Usage: cat file.json | jqq 'description of what to extract'"; return 1; fi
   local input=""
   if [ ! -t 0 ]; then input=$(cat); fi
@@ -137,7 +149,7 @@ Query: $*" | xargs)
 
 # gitm - AI commit messages
 gitm() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
+  local model="${SX_MODEL:-qwen3-coder}"
   local diff
   diff=$(git diff --cached --stat 2>/dev/null)
   if [ -z "$diff" ]; then echo "Nothing staged. Use 'git add' first."; return 1; fi
@@ -159,7 +171,7 @@ $full_diff" | head -1 | xargs)
 
 # how - Quick terminal how-to
 how() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
+  local model="${SX_MODEL:-qwen3-coder}"
   if [ $# -eq 0 ]; then echo "Usage: how <question>"; return 1; fi
   _ollama "$model" \
     "You are a concise terminal assistant. Answer in 1-5 lines. Show the command(s) needed. No markdown fences. If multiple approaches exist, show the simplest one. OS: $(uname -s) Shell: $SHELL" \
@@ -168,7 +180,7 @@ how() {
 
 # eli5 - Explain like I'm 5
 eli5() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
+  local model="${SX_MODEL:-qwen3-coder}"
   if [ $# -eq 0 ]; then echo "Usage: eli5 <concept>"; return 1; fi
   _ollama "$model" \
     "Explain this concept in plain, simple English. Use analogies. No jargon. No markdown fences. Keep it under 8 lines." \
@@ -177,7 +189,7 @@ eli5() {
 
 # manq - Ask a man page
 manq() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
+  local model="${SX_MODEL:-qwen3-coder}"
   if [ $# -lt 2 ]; then echo "Usage: manq <command> <question>"; return 1; fi
   local cmd="$1"; shift
   local question="$*"
@@ -194,10 +206,10 @@ Question: $question"
 
 # fixtypo - Fix typos and grammar
 fixtypo() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
-  local input
-  input=$(cat)
-  if [ -z "$input" ]; then echo "Usage: echo 'text with typos' | fixtypo"; return 1; fi
+  if [ -t 0 ]; then echo "Usage: echo 'text with typos' | fixtypo"; return 1; fi
+  local model="${SX_MODEL:-qwen3-coder}"
+  local input; input=$(cat | head -100)
+  if [ -z "$input" ]; then echo "No input received."; return 1; fi
   _ollama "$model" \
     "Fix all typos and grammar errors in the text. Output ONLY the corrected text. Do not explain changes. Preserve the original formatting, line breaks, and meaning." \
     "$input"
@@ -205,7 +217,7 @@ fixtypo() {
 
 # rename-files - Suggest file renames
 rename-files() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
+  local model="${SX_MODEL:-qwen3-coder}"
   if [ $# -eq 0 ]; then echo "Usage: ls files | rename-files 'naming convention'"; return 1; fi
   local input
   input=$(cat)
@@ -226,7 +238,7 @@ Convention: $*")
 
 # diagnose - System health check
 diagnose() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
+  local model="${SX_MODEL:-qwen3-coder}"
   echo "Collecting system state..." >&2
   local info=""
   info+="=== LOAD ===\n$(uptime 2>/dev/null)\n\n"
@@ -242,7 +254,7 @@ diagnose() {
 
 # portwtf - Explain what's on a port
 portwtf() {
-  local model="${SX_MODEL:-qwen2.5-coder:7b}"
+  local model="${SX_MODEL:-qwen3-coder}"
   if [ $# -eq 0 ]; then echo "Usage: portwtf <port>"; return 1; fi
   local port="$1"
   local info

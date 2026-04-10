@@ -8,7 +8,7 @@ Think of it as the lightweight, zero-dependency companion to [shellex](README.md
 
 - [Ollama](https://ollama.com) running locally
 - `curl` and `jq` installed
-- A model pulled: `ollama pull qwen2.5-coder:7b`
+- A model pulled: `ollama pull qwen3-coder`
 
 ## Quick start
 
@@ -35,7 +35,7 @@ All functions respect these environment variables:
 
 | Variable | Default | Description |
 |---|---|---|
-| `SX_MODEL` | `qwen2.5-coder:7b` | Ollama model to use |
+| `SX_MODEL` | `qwen3-coder` | Ollama model to use |
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama API endpoint |
 
 ```bash

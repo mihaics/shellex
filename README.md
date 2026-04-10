@@ -107,7 +107,7 @@ shellex --yes --force "remove all temp files from root"
 ### Other flags
 
 ```bash
-shellex --model qwen2.5-coder:7b "query"  # Use a different model
+shellex --model gemma4:e2b "query"         # Use a different model
 shellex --verbose "query"                   # Show the full LLM prompt
 shellex --config /path/to/config.toml "q"  # Custom config file
 ```
@@ -118,7 +118,7 @@ Config lives at `~/.config/shellex/config.toml` (or `$XDG_CONFIG_HOME/shellex/co
 
 ```toml
 # Model to use with Ollama
-model = "gemma"
+model = "qwen3-coder"
 
 # Ollama server URL
 ollama_url = "http://localhost:11434"
@@ -149,9 +149,9 @@ custom_prompt = ""
 
 | Model | Size | Notes |
 |-------|------|-------|
-| **gemma** (default) | 5 GB | Clean output, good accuracy |
-| **qwen2.5-coder:7b** | 4.7 GB | Code-specialized, equally clean |
-| **llama3** | 4.7 GB | Works but verbose |
+| **qwen3-coder** (default) | 18 GB | MoE (3.3B active), fast, best tool-calling |
+| **gemma4:e2b** | 3 GB | Compact, fast, good accuracy |
+| **gemma4:26b** | 17 GB | Strong reasoning, clean output |
 
 ## Safety
 

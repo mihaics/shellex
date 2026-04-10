@@ -1,5 +1,5 @@
 function manq --description "Ask about a man page: manq ffmpeg 'convert mp4 to gif at 10fps'"
-  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen2.5-coder:7b")
+  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen3-coder")
   if test (count $argv) -lt 2
     echo "Usage: manq <command> <question>"; return 1
   end

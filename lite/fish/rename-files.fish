@@ -1,5 +1,5 @@
 function rename-files --description "Suggest file renames: ls *.jpg | rename-files 'date-based naming'"
-  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen2.5-coder:7b")
+  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen3-coder")
   if test (count $argv) -eq 0
     echo "Usage: ls files | rename-files 'naming convention'"; return 1
   end

@@ -1,5 +1,5 @@
 function eli5 --description "Explain like I'm 5: eli5 iptables DNAT"
-  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen2.5-coder:7b")
+  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen3-coder")
   if test (count $argv) -eq 0
     echo "Usage: eli5 <concept>"; return 1
   end
