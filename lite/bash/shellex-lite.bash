@@ -12,10 +12,14 @@
 _ollama() {
   local model="$1" sys="$2" prompt="$3"
   local url="${OLLAMA_URL:-http://localhost:11434}"
-  jq -n --arg m "$model" --arg s "$sys" --arg p "$prompt" \
+  echo -ne "\033[90m⏳\033[0m" >&2
+  local result
+  result=$(jq -n --arg m "$model" --arg s "$sys" --arg p "$prompt" \
     '{model:$m, system:$s, prompt:$p, stream:false}' \
-    | curl -s --max-time 30 "$url/api/generate" -d @- 2>/dev/null \
-    | jq -r '.response // empty'
+    | curl -s --max-time 60 "$url/api/generate" -d @- 2>/dev/null \
+    | jq -r '.response // empty')
+  echo -ne "\r\033[K" >&2
+  echo "$result"
 }
 
 # sx - Natural language to shell command
