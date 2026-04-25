@@ -158,7 +158,7 @@ pub fn tokenize(input: &str) -> Vec<String> {
             // `>>` append redirect (two chars, checked before single `>`)
             '>' if i + 1 < len && chars[i + 1] == '>' => {
                 // `2>>` stays with the command (fd redirect)
-                if buf.trim_end().ends_with('2') {
+                if buffer_ends_with_fd_redirect_prefix(&buf) {
                     buf.push('>');
                     buf.push('>');
                     i += 2;
@@ -188,9 +188,7 @@ pub fn tokenize(input: &str) -> Vec<String> {
             '>' => {
                 // Check for `2>&1` pattern: current buffer ends with '2'
                 // and next chars are `>&1` (i.e. chars[i..i+3] == ">&1")
-                let buf_trimmed_ends_with_2 = buf.trim_end().ends_with('2');
-
-                if buf_trimmed_ends_with_2 {
+                if buffer_ends_with_fd_redirect_prefix(&buf) {
                     // Consume `>&1` (or `>&<digit>`) as part of the token
                     buf.push(ch); // '>'
                     i += 1;
@@ -224,6 +222,31 @@ pub fn tokenize(input: &str) -> Vec<String> {
     }
 
     tokens
+}
+
+fn buffer_ends_with_fd_redirect_prefix(buf: &str) -> bool {
+    if buf.ends_with(char::is_whitespace) {
+        return false;
+    }
+
+    let trimmed = buf.trim_end();
+    let mut digit_start = trimmed.len();
+    for (idx, ch) in trimmed.char_indices().rev() {
+        if ch.is_ascii_digit() {
+            digit_start = idx;
+        } else {
+            break;
+        }
+    }
+
+    if digit_start == trimmed.len() {
+        return false;
+    }
+
+    trimmed[..digit_start]
+        .chars()
+        .next_back()
+        .is_none_or(char::is_whitespace)
 }
 
 /// Format tokenized segments as numbered lines for the LLM prompt.
@@ -330,6 +353,18 @@ mod tests {
     fn test_stderr_redirect() {
         let tokens = tokenize("cmd 2>&1 | grep error");
         assert_eq!(tokens, vec!["cmd 2>&1", "|", "grep error"]);
+    }
+
+    #[test]
+    fn test_redirect_after_argument_ending_in_2() {
+        let tokens = tokenize("sha256sum file2 > output.txt");
+        assert_eq!(tokens, vec!["sha256sum file2", ">", "output.txt"]);
+    }
+
+    #[test]
+    fn test_append_redirect_after_argument_ending_in_2() {
+        let tokens = tokenize("sha256sum file2 >> output.txt");
+        assert_eq!(tokens, vec!["sha256sum file2", ">>", "output.txt"]);
     }
 
     #[test]

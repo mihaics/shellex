@@ -1,6 +1,6 @@
 function sx
   set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen3-coder")
-  set -l url (set -q SX_OLLAMA_URL && echo $SX_OLLAMA_URL || echo "http://localhost:11434")
+  set -l url (set -q OLLAMA_URL && echo $OLLAMA_URL || echo "http://localhost:11434")
   set -l sys "You are a shell command generator. Output ONLY the command, no explanation, no markdown, no backticks. One single command or pipeline. OS: "(uname -s)" Shell: $SHELL"
   set -l user_prompt (string join " " $argv)
 

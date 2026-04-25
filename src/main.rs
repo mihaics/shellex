@@ -15,6 +15,22 @@ use cli::Args;
 use config::Config;
 use interactive::UserAction;
 
+enum FinalAction {
+    RunSafe(String),
+    RunDangerous(String, Vec<String>),
+    Cancel,
+}
+
+fn classify_final_action(action: UserAction, checker: &safety::SafetyChecker) -> FinalAction {
+    match action {
+        UserAction::Run(cmd) => match checker.check(&cmd) {
+            safety::SafetyResult::Safe => FinalAction::RunSafe(cmd),
+            safety::SafetyResult::Dangerous(patterns) => FinalAction::RunDangerous(cmd, patterns),
+        },
+        UserAction::Cancel => FinalAction::Cancel,
+    }
+}
+
 #[tokio::main]
 async fn main() {
     if let Err(e) = run().await {
@@ -128,7 +144,8 @@ async fn run_generate(
     }
 
     // Interactive mode
-    let action = if safety_result.is_dangerous() {
+    let initially_dangerous = safety_result.is_dangerous();
+    let action = if initially_dangerous {
         if let safety::SafetyResult::Dangerous(ref patterns) = safety_result {
             interactive::prompt_dangerous(&command, patterns)?
         } else {
@@ -138,9 +155,27 @@ async fn run_generate(
         interactive::prompt_command(&command)?
     };
 
-    match action {
-        UserAction::Run(cmd) => execute_command(&cmd),
-        UserAction::Cancel => {
+    let final_action = if initially_dangerous {
+        match action {
+            UserAction::Run(cmd) => FinalAction::RunSafe(cmd),
+            UserAction::Cancel => FinalAction::Cancel,
+        }
+    } else {
+        classify_final_action(action, &checker)
+    };
+
+    match final_action {
+        FinalAction::RunSafe(cmd) => execute_command(&cmd),
+        FinalAction::RunDangerous(cmd, patterns) => {
+            match interactive::prompt_dangerous(&cmd, &patterns)? {
+                UserAction::Run(cmd) => execute_command(&cmd),
+                UserAction::Cancel => {
+                    eprintln!("Cancelled.");
+                    Ok(())
+                }
+            }
+        }
+        FinalAction::Cancel => {
             eprintln!("Cancelled.");
             Ok(())
         }
@@ -161,10 +196,9 @@ fn execute_command(command: &str) -> Result<()> {
 }
 
 async fn check_command_exists(command: &str) {
-    let first_token = command.split_whitespace().next().unwrap_or("");
-    if first_token.is_empty() {
+    let Some(first_token) = command_lookup_token(command) else {
         return;
-    }
+    };
 
     // Shell builtins won't be found by `which` — skip them
     const BUILTINS: &[&str] = &[
@@ -190,5 +224,89 @@ async fn check_command_exists(command: &str) {
                 first_token
             );
         }
+    }
+}
+
+fn command_lookup_token(command: &str) -> Option<&str> {
+    let mut tokens = command.split_whitespace().peekable();
+
+    while let Some(token) = tokens.next() {
+        if token.contains('=') && !token.starts_with('-') {
+            let mut parts = token.splitn(2, '=');
+            let name = parts.next().unwrap_or_default();
+            if !name.is_empty()
+                && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+                && !name.chars().next().unwrap().is_ascii_digit()
+            {
+                continue;
+            }
+        }
+
+        match token {
+            "sudo" | "doas" | "command" | "builtin" | "exec" => continue,
+            "env" => {
+                while let Some(next) = tokens.peek().copied() {
+                    if next.starts_with('-') {
+                        tokens.next();
+                        continue;
+                    }
+                    if next.contains('=') {
+                        tokens.next();
+                        continue;
+                    }
+                    break;
+                }
+                continue;
+            }
+            _ => return Some(token),
+        }
+    }
+
+    None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn checker() -> safety::SafetyChecker {
+        safety::SafetyChecker::new(&Config::default().dangerous_patterns).unwrap()
+    }
+
+    #[test]
+    fn final_safe_run_stays_safe() {
+        let result = classify_final_action(UserAction::Run("ls -la".to_string()), &checker());
+        assert!(matches!(result, FinalAction::RunSafe(cmd) if cmd == "ls -la"));
+    }
+
+    #[test]
+    fn final_edited_dangerous_command_requires_confirmation() {
+        let result = classify_final_action(UserAction::Run("rm -rf /".to_string()), &checker());
+        assert!(matches!(
+            result,
+            FinalAction::RunDangerous(cmd, patterns)
+                if cmd == "rm -rf /" && patterns.iter().any(|p| p.contains("rm"))
+        ));
+    }
+
+    #[test]
+    fn final_cancel_stays_cancelled() {
+        let result = classify_final_action(UserAction::Cancel, &checker());
+        assert!(matches!(result, FinalAction::Cancel));
+    }
+
+    #[test]
+    fn command_lookup_skips_environment_assignments() {
+        assert_eq!(
+            command_lookup_token("FOO=1 BAR=baz make test"),
+            Some("make")
+        );
+    }
+
+    #[test]
+    fn command_lookup_unwraps_common_wrappers() {
+        assert_eq!(command_lookup_token("sudo apt install htop"), Some("apt"));
+        assert_eq!(command_lookup_token("env FOO=1 cargo test"), Some("cargo"));
+        assert_eq!(command_lookup_token("command git status"), Some("git"));
     }
 }

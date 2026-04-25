@@ -28,3 +28,10 @@ fn test_no_args_fails() {
     let output = shellex().output().unwrap();
     assert!(!output.status.success());
 }
+
+#[test]
+fn test_fish_sx_respects_documented_ollama_url() {
+    let sx = std::fs::read_to_string("lite/fish/sx.fish").unwrap();
+    assert!(sx.contains("OLLAMA_URL"));
+    assert!(!sx.contains("SX_OLLAMA_URL"));
+}
