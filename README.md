@@ -111,6 +111,25 @@ shellex --yes --dry-run "count lines in all python files"
 shellex --yes --force "remove all temp files from root"
 ```
 
+With `--dry-run` nothing executes, so dangerous commands are printed
+instead of blocked — the warning still goes to stderr.
+
+### Shell integration (recommended)
+
+Instead of letting shellex execute commands, put the generated command on
+your prompt line — you get your shell's real line editor, completions, and
+history.
+
+```bash
+# fish (~/.config/fish/config.fish)
+source /path/to/shellex/shell/shellex.fish
+
+# bash (~/.bashrc)
+source /path/to/shellex/shell/shellex.bash
+```
+
+Type what you want, press **Alt+X**, review/edit the command, hit Enter.
+
 ### Other flags
 
 ```bash
@@ -169,7 +188,7 @@ shellex never auto-executes commands. Generated commands must be confirmed by th
 
 Additionally, a configurable regex blocklist detects dangerous patterns (`rm -rf /`, `mkfs`, `dd of=/dev/`, `curl | sh`, etc.). Matching commands require typing `yes` to proceed — no inline editing allowed.
 
-In `--yes` scripting mode, dangerous commands exit with code 2 unless `--force` is also passed.
+In `--yes` scripting mode, dangerous commands exit with code 2 unless `--force` is also passed. The exception is `--yes --dry-run`, which prints the command (warning on stderr) since nothing executes.
 
 The explain mode tokenizer operates on raw bytes and never evaluates shell expressions. `$(rm -rf /)` passes through as a literal string for the LLM to explain.
 

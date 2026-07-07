@@ -117,6 +117,20 @@ async fn run_generate(
 
     // Handle --yes mode
     if args.yes {
+        // Dry run prints without executing: skip the execution warning and
+        // don't block dangerous commands (nothing runs) — but keep the
+        // warning visible on stderr so a human reviews before running.
+        if args.dry_run {
+            if let safety::SafetyResult::Dangerous(patterns) = &safety_result {
+                eprintln!("Warning: This command matches a dangerous pattern:");
+                for p in patterns {
+                    eprintln!("  - {}", p);
+                }
+            }
+            println!("{}", command);
+            return Ok(());
+        }
+
         // First-time warning
         if !config.yes_warned {
             eprintln!("Warning: --yes mode executes without confirmation. You accept full responsibility.");
@@ -134,11 +148,6 @@ async fn run_generate(
                 eprintln!("Use --force to override safety check in --yes mode.");
             }
             process::exit(2);
-        }
-
-        if args.dry_run {
-            println!("{}", command);
-            return Ok(());
         }
 
         interactive::print_yes_mode(&command);
