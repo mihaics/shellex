@@ -18,7 +18,7 @@ _ollama() {
   # Ollama-compatible servers, unlike /api/generate's `system` field.
   result=$(jq -n --arg m "$model" --arg s "$sys" --arg p "$prompt" \
     '{model:$m, messages:[{role:"system",content:$s},{role:"user",content:$p}], stream:false}' \
-    | curl -s --max-time 60 "$url/api/chat" -d @- 2>/dev/null \
+    | curl -s --max-time 300 "$url/api/chat" -d @- 2>/dev/null \
     | jq -r '.message.content // empty')
   echo -ne "\r\033[K" >&2
   echo "$result"
