@@ -49,7 +49,20 @@ pub fn build_explain_system_prompt() -> String {
     EXPLAIN_SYSTEM_PROMPT.to_string()
 }
 
+/// Remove reasoning-model thinking blocks. Closed `<think>...</think>` blocks
+/// are deleted; an unclosed `<think>` truncates the rest (it's all reasoning).
+pub fn strip_think_blocks(response: &str) -> String {
+    let re = Regex::new(r"(?s)<think>.*?</think>").unwrap();
+    let without_closed = re.replace_all(response, "");
+    let result = match without_closed.find("<think>") {
+        Some(idx) => &without_closed[..idx],
+        None => &without_closed,
+    };
+    result.trim().to_string()
+}
+
 pub fn parse_generate_response(response: &str) -> String {
+    let response = strip_think_blocks(response);
     let trimmed = response.trim();
 
     // Strip markdown code fences
@@ -143,5 +156,22 @@ mod tests {
     fn test_parse_response_strips_inline_backticks() {
         let response = "`cd ~/Documents`";
         assert_eq!(parse_generate_response(response), "cd ~/Documents");
+    }
+
+    #[test]
+    fn test_parse_response_strips_think_block() {
+        let response = "<think>\nThe user wants to list files.\n</think>\nls -la";
+        assert_eq!(parse_generate_response(response), "ls -la");
+    }
+
+    #[test]
+    fn test_parse_response_unclosed_think_yields_empty() {
+        let response = "<think>reasoning that got cut off";
+        assert_eq!(parse_generate_response(response), "");
+    }
+
+    #[test]
+    fn test_strip_think_noop_without_block() {
+        assert_eq!(strip_think_blocks("ls -la"), "ls -la");
     }
 }

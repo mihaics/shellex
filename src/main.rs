@@ -65,7 +65,7 @@ async fn run_explain(client: &ollama::OllamaClient, command: &str) -> Result<()>
     let system_prompt = prompt::build_explain_system_prompt();
 
     let response = client.generate(&system_prompt, &segments).await?;
-    println!("{}", response);
+    println!("{}", prompt::strip_think_blocks(&response));
     Ok(())
 }
 
