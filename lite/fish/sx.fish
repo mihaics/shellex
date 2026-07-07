@@ -5,9 +5,9 @@ function sx
   set -l user_prompt (string join " " $argv)
 
   set -l json (jq -n --arg m $model --arg s "$sys" --arg p "$user_prompt" \
-    '{model:$m, system:$s, prompt:$p, stream:false}')
-  set -l cmd (curl -s "$url/api/generate" -d "$json" 2>/dev/null \
-    | jq -r '.response // empty' | string trim | head -1 \
+    '{model:$m, messages:[{role:"system",content:$s},{role:"user",content:$p}], stream:false}')
+  set -l cmd (curl -s "$url/api/chat" -d "$json" 2>/dev/null \
+    | jq -r '.message.content // empty' | string trim | head -1 \
     | string replace -r '^```\w*' '' | string replace -r '```$' '' \
     | string replace -r '^`' '' | string replace -r '`$' '' | string trim)
 

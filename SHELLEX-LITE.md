@@ -197,11 +197,11 @@ Shows what's listening and explains the process.
 All functions share a common pattern:
 
 1. Build a JSON payload with `jq -n` (safe escaping of user input)
-2. POST to `http://localhost:11434/api/generate` with a focused system prompt
-3. Parse the response with `jq -r '.response'`
+2. POST to `http://localhost:11434/api/chat` with a system + user message
+3. Parse the response with `jq -r '.message.content'`
 4. Strip LLM artifacts (markdown fences, backticks)
 
-The key difference from `ollama run`: the API supports a proper `system` prompt field, which dramatically improves output quality.
+The key difference from `ollama run`: the chat endpoint's explicit system role dramatically improves output quality, and it works across Ollama-compatible servers.
 
 Fish functions use a shared `_ollama` helper. Bash functions are self-contained.
 

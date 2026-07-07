@@ -14,10 +14,12 @@ _ollama() {
   local url="${OLLAMA_URL:-http://localhost:11434}"
   echo -ne "\033[90m⏳\033[0m" >&2
   local result
+  # Use /api/chat with an explicit system role — honored by Ollama and other
+  # Ollama-compatible servers, unlike /api/generate's `system` field.
   result=$(jq -n --arg m "$model" --arg s "$sys" --arg p "$prompt" \
-    '{model:$m, system:$s, prompt:$p, stream:false}' \
-    | curl -s --max-time 60 "$url/api/generate" -d @- 2>/dev/null \
-    | jq -r '.response // empty')
+    '{model:$m, messages:[{role:"system",content:$s},{role:"user",content:$p}], stream:false}' \
+    | curl -s --max-time 60 "$url/api/chat" -d @- 2>/dev/null \
+    | jq -r '.message.content // empty')
   echo -ne "\r\033[K" >&2
   echo "$result"
 }
