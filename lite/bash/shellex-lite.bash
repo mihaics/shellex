@@ -4,7 +4,7 @@
 #   source /path/to/shellex-lite.bash
 #
 # Config via environment variables:
-#   SX_MODEL     - Ollama model (default: qwen3-coder)
+#   SX_MODEL     - Ollama model (default: gemma4:12b)
 #   OLLAMA_URL   - Ollama API endpoint (default: http://localhost:11434)
 #
 # Requires: curl, jq, ollama running locally
@@ -26,7 +26,7 @@ _ollama() {
 
 # sx - Natural language to shell command
 sx() {
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   local sys="You are a shell command generator. Output ONLY the command, no explanation, no markdown, no backticks. One single command or pipeline. OS: $(uname -s) Shell: $SHELL"
   local cmd
   cmd=$(_ollama "$model" "$sys" "$*" | head -1 \
@@ -40,7 +40,7 @@ sx() {
 # wtf - Explain errors
 wtf() {
   if [ -t 0 ]; then echo "Usage: some_command 2>&1 | wtf"; return 1; fi
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   local input; input=$(cat | head -100)
   if [ -z "$input" ]; then echo "No input received."; return 1; fi
   _ollama "$model" \
@@ -51,7 +51,7 @@ wtf() {
 # tldr - Summarize verbose output
 tldr() {
   if [ -t 0 ]; then echo "Usage: some_command | tldr"; return 1; fi
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   local input; input=$(cat | head -100)
   if [ -z "$input" ]; then echo "No input received."; return 1; fi
   _ollama "$model" \
@@ -61,7 +61,7 @@ tldr() {
 
 # ai - LLM agent: answers questions by running commands, or transforms piped text
 ai() {
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   if [ $# -eq 0 ]; then echo "Usage: ai 'question'  OR  echo text | ai 'instruction'"; return 1; fi
   local instruction="$*"
 
@@ -122,7 +122,7 @@ $capped"
 
 # rx - Natural language to regex
 rx() {
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   if [ $# -eq 0 ]; then echo "Usage: rx 'description of pattern'"; return 1; fi
   _ollama "$model" \
     "You are a regex generator. Output ONLY the regex pattern, nothing else. No explanation, no markdown, no backticks. One single regex. Use extended regex syntax (ERE) compatible with grep -E." \
@@ -131,7 +131,7 @@ rx() {
 
 # jqq - Natural language jq queries
 jqq() {
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   if [ $# -eq 0 ]; then echo "Usage: cat file.json | jqq 'description of what to extract'"; return 1; fi
   local input=""
   if [ ! -t 0 ]; then input=$(cat); fi
@@ -155,7 +155,7 @@ Query: $*" | xargs)
 
 # gitm - AI commit messages
 gitm() {
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   local diff
   diff=$(git diff --cached --stat 2>/dev/null)
   if [ -z "$diff" ]; then echo "Nothing staged. Use 'git add' first."; return 1; fi
@@ -177,7 +177,7 @@ $full_diff" | head -1 | xargs)
 
 # how - Quick terminal how-to
 how() {
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   if [ $# -eq 0 ]; then echo "Usage: how <question>"; return 1; fi
   _ollama "$model" \
     "You are a concise terminal assistant. Answer in 1-5 lines. Show the command(s) needed. No markdown fences. If multiple approaches exist, show the simplest one. OS: $(uname -s) Shell: $SHELL" \
@@ -186,7 +186,7 @@ how() {
 
 # eli5 - Explain like I'm 5
 eli5() {
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   if [ $# -eq 0 ]; then echo "Usage: eli5 <concept>"; return 1; fi
   _ollama "$model" \
     "Explain this concept in plain, simple English. Use analogies. No jargon. No markdown fences. Keep it under 8 lines." \
@@ -195,7 +195,7 @@ eli5() {
 
 # manq - Ask a man page
 manq() {
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   if [ $# -lt 2 ]; then echo "Usage: manq <command> <question>"; return 1; fi
   local cmd="$1"; shift
   local question="$*"
@@ -213,7 +213,7 @@ Question: $question"
 # fixtypo - Fix typos and grammar
 fixtypo() {
   if [ -t 0 ]; then echo "Usage: echo 'text with typos' | fixtypo"; return 1; fi
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   local input; input=$(cat | head -100)
   if [ -z "$input" ]; then echo "No input received."; return 1; fi
   _ollama "$model" \
@@ -223,7 +223,7 @@ fixtypo() {
 
 # rename-files - Suggest file renames
 rename-files() {
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   if [ $# -eq 0 ]; then echo "Usage: ls files | rename-files 'naming convention'"; return 1; fi
   local input
   input=$(cat)
@@ -244,7 +244,7 @@ Convention: $*")
 
 # diagnose - System health check
 diagnose() {
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   echo "Collecting system state..." >&2
   local info=""
   info+="=== LOAD ===\n$(uptime 2>/dev/null)\n\n"
@@ -260,7 +260,7 @@ diagnose() {
 
 # portwtf - Explain what's on a port
 portwtf() {
-  local model="${SX_MODEL:-qwen3-coder}"
+  local model="${SX_MODEL:-gemma4:12b}"
   if [ $# -eq 0 ]; then echo "Usage: portwtf <port>"; return 1; fi
   local port="$1"
   local info

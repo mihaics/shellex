@@ -17,7 +17,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            model: "qwen3-coder".to_string(),
+            model: "gemma4:12b".to_string(),
             ollama_url: "http://localhost:11434".to_string(),
             yes_warned: false,
             dangerous_patterns: vec![
@@ -105,7 +105,7 @@ mod tests {
     #[test]
     fn test_default_config() {
         let config = Config::default();
-        assert_eq!(config.model, "qwen3-coder");
+        assert_eq!(config.model, "gemma4:12b");
         assert_eq!(config.ollama_url, "http://localhost:11434");
         assert!(!config.yes_warned);
         assert!(!config.dangerous_patterns.is_empty());
@@ -171,7 +171,7 @@ custom_prompt = "prefer ripgrep"
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("shellex").join("config.toml");
         let config = Config::load_or_create(&path).unwrap();
-        assert_eq!(config.model, "qwen3-coder");
+        assert_eq!(config.model, "gemma4:12b");
         assert!(path.exists());
     }
 

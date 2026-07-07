@@ -1,5 +1,5 @@
 function diagnose --description "Collect system state and explain what looks wrong"
-  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen3-coder")
+  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "gemma4:12b")
   echo "Collecting system state..." >&2
 
   set -l info ""

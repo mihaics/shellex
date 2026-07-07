@@ -49,8 +49,8 @@ Download the latest release for your platform from [Releases](https://github.com
 # Install Ollama
 curl -fsSL https://ollama.com/install.sh | sh
 
-# Pull a model (gemma is the default)
-ollama pull gemma
+# Pull a model (gemma4:12b is the default)
+ollama pull gemma4:12b
 
 # Start the server (if not already running)
 ollama serve
@@ -118,7 +118,7 @@ Config lives at `~/.config/shellex/config.toml` (or `$XDG_CONFIG_HOME/shellex/co
 
 ```toml
 # Model to use with Ollama
-model = "qwen3-coder"
+model = "gemma4:12b"
 
 # Ollama server URL
 ollama_url = "http://localhost:11434"
@@ -149,7 +149,8 @@ custom_prompt = ""
 
 | Model | Size | Notes |
 |-------|------|-------|
-| **qwen3-coder** (default) | 18 GB | MoE (3.3B active), fast, best tool-calling |
+| **gemma4:12b** (default) | 8 GB | Balanced quality and speed, clean output |
+| **qwen3-coder** | 18 GB | MoE (3.3B active), fast, best tool-calling |
 | **gemma4:e2b** | 3 GB | Compact, fast, good accuracy |
 | **gemma4:26b** | 17 GB | Strong reasoning, clean output |
 

@@ -1,5 +1,5 @@
 function rx --description "Natural language to regex: rx 'email addresses'"
-  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen3-coder")
+  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "gemma4:12b")
   if test (count $argv) -eq 0
     echo "Usage: rx 'description of pattern'"; return 1
   end

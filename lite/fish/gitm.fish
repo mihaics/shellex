@@ -1,5 +1,5 @@
 function gitm --description "Auto-generate commit message from staged changes"
-  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen3-coder")
+  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "gemma4:12b")
   set -l diff (git diff --cached --stat 2>/dev/null)
   if test -z "$diff"
     echo "Nothing staged. Use 'git add' first."; return 1

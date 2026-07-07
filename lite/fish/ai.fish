@@ -1,5 +1,5 @@
 function ai --description "LLM agent: ai 'what linux version am I running' or echo text | ai 'summarize'"
-  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen3-coder")
+  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "gemma4:12b")
   if test (count $argv) -eq 0
     echo "Usage: ai 'question'  OR  echo text | ai 'instruction'"; return 1
   end

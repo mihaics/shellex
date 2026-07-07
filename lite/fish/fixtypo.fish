@@ -2,7 +2,7 @@ function fixtypo --description "Fix typos in piped text: echo 'teh quikc fox' | 
   if isatty stdin
     echo "Usage: echo 'text with typos' | fixtypo"; return 1
   end
-  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen3-coder")
+  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "gemma4:12b")
   read -z input
   set -l input (printf '%s' "$input" | head -100 | string collect)
   if test -z "$input"

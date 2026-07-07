@@ -1,5 +1,5 @@
 function portwtf --description "Explain what's on a port: portwtf 8080"
-  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "qwen3-coder")
+  set -l model (set -q SX_MODEL && echo $SX_MODEL || echo "gemma4:12b")
   if test (count $argv) -eq 0
     echo "Usage: portwtf <port>"; return 1
   end
