@@ -53,7 +53,7 @@ async fn run() -> Result<()> {
     let client = ollama::OllamaClient::new(&config.ollama_url, &model)?;
 
     if args.explain {
-        run_explain(&client, &args.input).await
+        run_explain(&client, &args.input_text()).await
     } else {
         run_generate(&client, &args, &mut config, &config_path).await
     }
@@ -92,14 +92,16 @@ async fn run_generate(
         &config.custom_prompt,
     );
 
+    let input = args.input_text();
+
     // Verbose: show prompt
     if args.verbose {
         eprintln!("[system] {}", system_prompt);
-        eprintln!("[user] {}", args.input);
+        eprintln!("[user] {}", input);
     }
 
     // Call LLM
-    let raw_response = client.generate(&system_prompt, &args.input).await?;
+    let raw_response = client.generate(&system_prompt, &input).await?;
     let command = prompt::parse_generate_response(&raw_response);
 
     if command.is_empty() {

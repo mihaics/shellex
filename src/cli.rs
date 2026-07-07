@@ -6,7 +6,8 @@ use std::path::PathBuf;
 #[command(name = "shellex", version, about)]
 pub struct Args {
     /// The natural-language intent (generate mode) or command to explain (with -e)
-    pub input: String,
+    #[arg(required = true, num_args = 1..)]
+    pub input: Vec<String>,
 
     /// Explain mode: interpret the input as a shell command and explain it
     #[arg(short = 'e', long = "explain")]
@@ -41,6 +42,13 @@ pub struct Args {
     pub verbose: bool,
 }
 
+impl Args {
+    /// The positional words joined into the prompt text.
+    pub fn input_text(&self) -> String {
+        self.input.join(" ")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -48,7 +56,7 @@ mod tests {
     #[test]
     fn test_generate_mode_basic() {
         let args = Args::parse_from(["shellex", "find large files"]);
-        assert_eq!(args.input, "find large files");
+        assert_eq!(args.input_text(), "find large files");
         assert!(!args.explain);
         assert!(!args.ctx);
         assert!(!args.yes);
@@ -59,14 +67,34 @@ mod tests {
     fn test_explain_mode() {
         let args = Args::parse_from(["shellex", "-e", "tar czf - /var/log"]);
         assert!(args.explain);
-        assert_eq!(args.input, "tar czf - /var/log");
+        assert_eq!(args.input_text(), "tar czf - /var/log");
     }
 
     #[test]
     fn test_ctx_flag() {
         let args = Args::parse_from(["shellex", "--ctx", "list services"]);
         assert!(args.ctx);
-        assert_eq!(args.input, "list services");
+        assert_eq!(args.input_text(), "list services");
+    }
+
+    #[test]
+    fn test_generate_mode_unquoted_multiword() {
+        let args = Args::parse_from(["shellex", "find", "large", "files"]);
+        assert_eq!(args.input_text(), "find large files");
+    }
+
+    #[test]
+    fn test_flags_still_parse_after_words() {
+        let args = Args::parse_from(["shellex", "list", "files", "--verbose"]);
+        assert!(args.verbose);
+        assert_eq!(args.input_text(), "list files");
+    }
+
+    #[test]
+    fn test_double_dash_allows_flaglike_words() {
+        let args = Args::parse_from(["shellex", "--yes", "--", "remove", "the", "--force", "flag"]);
+        assert!(args.yes);
+        assert_eq!(args.input_text(), "remove the --force flag");
     }
 
     #[test]

@@ -64,7 +64,14 @@ ollama serve
 shellex "find all log files modified in the last week"
 shellex "compress this directory and upload via scp to myserver"
 shellex "show disk usage sorted by size"
+
+# Quotes are optional for plain intents:
+shellex find all log files modified in the last week
 ```
+
+Quote (or use `--`) when the intent contains flag-like words or shell
+metacharacters, and always quote commands passed to `-e` whose meaning
+depends on exact quoting/spacing.
 
 The generated command is shown with an interactive prompt:
 - **Enter** - run the command
