@@ -149,7 +149,9 @@ mod tests {
 
     #[test]
     fn test_rm_rf_home_subdir_var_safe() {
-        assert!(!checker().check("rm -rf $HOME/old-project/build").is_dangerous());
+        assert!(!checker()
+            .check("rm -rf $HOME/old-project/build")
+            .is_dangerous());
     }
 
     #[test]

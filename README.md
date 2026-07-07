@@ -184,7 +184,7 @@ cargo test --ignored              # Ollama smoke tests (requires running Ollama)
 
 ## How it works
 
-1. Your intent is sent to a local Ollama model with a system prompt that constrains output to a single command
+1. Your intent is sent to a local Ollama-compatible server (`/api/chat`) with a system prompt that constrains output to a single command
 2. The response is parsed (markdown fences and backticks stripped, first line extracted)
 3. The command is checked against a safety blocklist
 4. Top-level command existence is verified via `which` (shell builtins are skipped)
