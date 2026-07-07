@@ -101,6 +101,36 @@ mod tests {
             .is_dangerous());
     }
 
+    #[test]
+    fn test_redirect_to_device_with_space() {
+        assert!(checker().check("echo x > /dev/sda").is_dangerous());
+    }
+
+    #[test]
+    fn test_redirect_to_nvme_device() {
+        assert!(checker().check("cat img > /dev/nvme0n1").is_dangerous());
+    }
+
+    #[test]
+    fn test_rm_rf_home_tilde() {
+        assert!(checker().check("rm -rf ~").is_dangerous());
+    }
+
+    #[test]
+    fn test_rm_rf_home_var() {
+        assert!(checker().check("rm -rf $HOME").is_dangerous());
+    }
+
+    #[test]
+    fn test_rm_rf_home_var_quoted() {
+        assert!(checker().check("rm -rf \"$HOME\"").is_dangerous());
+    }
+
+    #[test]
+    fn test_rm_rf_home_var_braced() {
+        assert!(checker().check("rm -rf ${HOME}").is_dangerous());
+    }
+
     // Negative matches — these should NOT be flagged
     #[test]
     fn test_rm_single_file_safe() {
@@ -110,6 +140,16 @@ mod tests {
     #[test]
     fn test_rm_rf_relative_path_safe() {
         assert!(!checker().check("rm -rf ./build/").is_dangerous());
+    }
+
+    #[test]
+    fn test_rm_rf_subdir_of_home_safe() {
+        assert!(!checker().check("rm -rf ~/old-project/build").is_dangerous());
+    }
+
+    #[test]
+    fn test_rm_rf_home_subdir_var_safe() {
+        assert!(!checker().check("rm -rf $HOME/old-project/build").is_dangerous());
     }
 
     #[test]

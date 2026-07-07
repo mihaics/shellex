@@ -33,25 +33,27 @@ Question: $instruction" | string trim | head -1 \
   end
 
   # Step 2: safety check — blacklist dangerous patterns
+  # POSIX classes, not \s/\S/\b — those are GNU extensions absent in BSD grep -E
   set -l dangerous_patterns \
-    'rm\s+(\S+\s+)+/' \
+    'rm[[:space:]]+([^[:space:]]+[[:space:]]+)+/' \
+    'rm[[:space:]]+([^[:space:]]+[[:space:]]+)*["\']?(~|\$\{?HOME\}?)["\']?/?([[:space:]]|$)' \
     'mkfs' \
-    'dd\s+.*of=/dev/' \
+    'dd[[:space:]]+.*of=/dev/' \
     ':\(\)\{.*\|.*&\}.*;:' \
-    'chmod\s+777' \
-    '>/dev/sd' \
+    'chmod[[:space:]]+777' \
+    '>[[:space:]]*/dev/(sd|hd|vd|nvme|mmcblk)' \
     'wget.*\|.*sh' \
     'curl.*\|.*sh' \
-    'sudo\s+rm' \
-    'sudo\s+mkfs' \
-    'sudo\s+dd' \
+    'sudo[[:space:]]+rm' \
+    'sudo[[:space:]]+mkfs' \
+    'sudo[[:space:]]+dd' \
     'reboot' \
     'shutdown' \
-    'kill\s+-9\s+1\b' \
-    'mv\s+/\S' \
-    'systemctl\s+(stop|disable|mask)' \
-    '>\s*/etc/' \
-    'chmod\s+[0-7]*[0-7]\s+/'
+    'kill[[:space:]]+-9[[:space:]]+1([[:space:]]|$)' \
+    'mv[[:space:]]+/[^[:space:]]' \
+    'systemctl[[:space:]]+(stop|disable|mask)' \
+    '>[[:space:]]*/etc/' \
+    'chmod[[:space:]]+[0-7]*[0-7][[:space:]]+/'
 
   set -l is_dangerous 0
   for pattern in $dangerous_patterns

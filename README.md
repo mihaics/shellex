@@ -126,9 +126,11 @@ ollama_url = "http://localhost:11434"
 # Regex patterns that trigger a safety warning
 dangerous_patterns = [
     "rm\\s+(\\S+\\s+)+/",
+    "rm\\s+(\\S+\\s+)*[\"']?(~|\\$\\{?HOME\\}?)[\"']?/?(\\s|$)",
     "mkfs",
     "dd\\s+.*of=/dev/",
     "chmod\\s+777",
+    ">\\s*/dev/(sd|hd|vd|nvme|mmcblk)",
     "wget.*\\|.*sh",
     "curl.*\\|.*sh",
 ]

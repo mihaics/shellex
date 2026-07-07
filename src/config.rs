@@ -22,11 +22,12 @@ impl Default for Config {
             yes_warned: false,
             dangerous_patterns: vec![
                 r"rm\s+(\S+\s+)+/".to_string(),
+                r#"rm\s+(\S+\s+)*["']?(~|\$\{?HOME\}?)["']?/?(\s|$)"#.to_string(),
                 r"mkfs".to_string(),
                 r"dd\s+.*of=/dev/".to_string(),
                 r":\(\)\{.*\|.*&\}.*;:".to_string(),
                 r"chmod\s+777".to_string(),
-                r">/dev/sd".to_string(),
+                r">\s*/dev/(sd|hd|vd|nvme|mmcblk)".to_string(),
                 r"wget.*\|.*sh".to_string(),
                 r"curl.*\|.*sh".to_string(),
             ],

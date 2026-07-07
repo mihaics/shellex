@@ -92,7 +92,8 @@ Question: $instruction" | head -1 \
   fi
 
   # Safety check — blacklist dangerous patterns
-  local danger_patterns='rm\s+(\S+\s+)+/|mkfs|dd\s+.*of=/dev/|:\(\)\{.*\|.*&\}.*;:|chmod\s+777|>/dev/sd|wget.*\|.*sh|curl.*\|.*sh|sudo\s+rm|sudo\s+mkfs|sudo\s+dd|reboot|shutdown|kill\s+-9\s+1\b|mv\s+/\S|systemctl\s+(stop|disable|mask)|>\s*/etc/|chmod\s+[0-7]*[0-7]\s+/'
+  # POSIX classes, not \s/\S/\b — those are GNU extensions absent in BSD grep -E
+  local danger_patterns='rm[[:space:]]+([^[:space:]]+[[:space:]]+)+/|rm[[:space:]]+([^[:space:]]+[[:space:]]+)*["'"'"']?(~|\$\{?HOME\}?)["'"'"']?/?([[:space:]]|$)|mkfs|dd[[:space:]]+.*of=/dev/|:\(\)\{.*\|.*&\}.*;:|chmod[[:space:]]+777|>[[:space:]]*/dev/(sd|hd|vd|nvme|mmcblk)|wget.*\|.*sh|curl.*\|.*sh|sudo[[:space:]]+rm|sudo[[:space:]]+mkfs|sudo[[:space:]]+dd|reboot|shutdown|kill[[:space:]]+-9[[:space:]]+1([[:space:]]|$)|mv[[:space:]]+/[^[:space:]]|systemctl[[:space:]]+(stop|disable|mask)|>[[:space:]]*/etc/|chmod[[:space:]]+[0-7]*[0-7][[:space:]]+/'
   echo -e "\033[90m→ $cmd\033[0m" >&2
   if echo "$cmd" | grep -qE "$danger_patterns"; then
     echo -e "\033[31m⚠ dangerous command — not auto-executing\033[0m" >&2
