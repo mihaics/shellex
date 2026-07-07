@@ -68,7 +68,10 @@ Question: $instruction" | string trim | head -1 \
     read -P "[Enter=run anyway, Ctrl-C=cancel] " confirm
   end
 
-  set -l output (eval $cmd 2>&1)
+  # Capture to a temp file: command substitution would split output into a
+  # list that later re-joins with spaces, destroying newlines and line counts.
+  set -l tmpout (mktemp); or return 1
+  eval $cmd >$tmpout 2>&1
   set -l exit_code $status
 
   if test $exit_code -ne 0
@@ -76,13 +79,13 @@ Question: $instruction" | string trim | head -1 \
   end
 
   # Step 3: summarize or print directly
-  set -l line_count (echo "$output" | wc -l | string trim)
+  set -l line_count (wc -l <$tmpout | string trim)
   if test $line_count -le 20
     # Short output — just print it, no need for a second LLM call
-    echo "$output"
+    cat $tmpout
   else
     # Long output — cap at 100 lines and let LLM summarize
-    set -l capped (echo "$output" | head -100)
+    set -l capped (head -100 $tmpout | string collect)
     _ollama $model \
       "You ran a command to answer the user's question. Give a clear, concise answer based on the output. No markdown fences. If the output is short enough, include the key data directly." \
       "Question: $instruction
@@ -91,4 +94,5 @@ Exit code: $exit_code
 Output (first 100 lines):
 $capped"
   end
+  rm -f $tmpout
 end
