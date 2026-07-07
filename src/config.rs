@@ -4,6 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(default)]
 pub struct Config {
     pub model: String,
     pub ollama_url: String,
@@ -110,6 +111,18 @@ mod tests {
         assert!(!config.dangerous_patterns.is_empty());
         assert!(!config.ctx_tools.is_empty());
         assert_eq!(config.custom_prompt, "");
+    }
+
+    #[test]
+    fn test_partial_config_gets_defaults() {
+        // A user config with only `model` set (like the README example, which
+        // omits yes_warned) must parse, taking defaults for missing fields.
+        let config: Config = toml::from_str(r#"model = "gemma:7b""#).unwrap();
+        assert_eq!(config.model, "gemma:7b");
+        assert_eq!(config.ollama_url, "http://localhost:11434");
+        assert!(!config.yes_warned);
+        assert!(!config.dangerous_patterns.is_empty());
+        assert!(!config.ctx_tools.is_empty());
     }
 
     #[test]
