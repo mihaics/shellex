@@ -65,7 +65,11 @@ Question: $instruction" | string trim | head -1 \
 
   if test $is_dangerous -eq 1
     set_color red; echo "⚠ dangerous command — not auto-executing" >&2; set_color normal
-    read -P "[Enter=run anyway, Ctrl-C=cancel] " confirm
+    read -P "Type 'yes' to run anyway: " confirm
+    if test "$confirm" != yes
+      echo "Cancelled." >&2
+      return 1
+    end
   end
 
   # Capture to a temp file: command substitution would split output into a

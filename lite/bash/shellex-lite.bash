@@ -96,7 +96,9 @@ Question: $instruction" | head -1 \
   echo -e "\033[90m→ $cmd\033[0m" >&2
   if echo "$cmd" | grep -qE "$danger_patterns"; then
     echo -e "\033[31m⚠ dangerous command — not auto-executing\033[0m" >&2
-    read -p "[Enter=run anyway, Ctrl-C=cancel] "
+    local confirm
+    read -r -p "Type 'yes' to run anyway: " confirm
+    if [ "$confirm" != "yes" ]; then echo "Cancelled." >&2; return 1; fi
   fi
 
   local output exit_code
