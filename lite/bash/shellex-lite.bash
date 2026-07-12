@@ -16,8 +16,10 @@ _ollama() {
   local result
   # Use /api/chat with an explicit system role — honored by Ollama and other
   # Ollama-compatible servers, unlike /api/generate's `system` field.
+  # think:false stops reasoning models from rambling for minutes; a small
+  # num_ctx overrides server-wide context defaults that slow model loads.
   result=$(jq -n --arg m "$model" --arg s "$sys" --arg p "$prompt" \
-    '{model:$m, messages:[{role:"system",content:$s},{role:"user",content:$p}], stream:false}' \
+    '{model:$m, messages:[{role:"system",content:$s},{role:"user",content:$p}], stream:false, think:false, options:{num_ctx:4096}}' \
     | curl -s --max-time 300 "$url/api/chat" -d @- 2>/dev/null \
     | jq -r '.message.content // empty')
   echo -ne "\r\033[K" >&2

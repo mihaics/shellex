@@ -6,6 +6,10 @@ use std::io::{stderr, IsTerminal, Write};
 use std::time::Duration;
 
 const REQUEST_TIMEOUT_SECS: u64 = 120;
+// Shell one-liners need little context; a small num_ctx overrides server-wide
+// defaults (e.g. OLLAMA_CONTEXT_LENGTH=65536) that inflate KV-cache memory and
+// load time. Ollama accepts "think": false on non-thinking models too.
+const NUM_CTX: u32 = 4096;
 
 pub struct OllamaClient {
     http: reqwest::Client,
@@ -77,6 +81,8 @@ impl OllamaClient {
                 {"role": "user", "content": user_prompt},
             ],
             "stream": false,
+            "think": false,
+            "options": {"num_ctx": NUM_CTX},
         });
 
         let _wait = WaitIndicator::start();
@@ -169,6 +175,29 @@ mod tests {
         let client = OllamaClient::new(&url, "m").unwrap();
         let out = client.generate("sys", "user").await.unwrap();
         assert_eq!(out, "ls -la");
+    }
+
+    #[tokio::test]
+    async fn test_generate_request_disables_thinking_and_caps_context() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let (tx, rx) = tokio::sync::oneshot::channel::<String>();
+        let body = r#"{"message":{"role":"assistant","content":"ls"},"done":true}"#;
+        let response = http_200(body);
+        tokio::spawn(async move {
+            let (mut sock, _) = listener.accept().await.unwrap();
+            let mut buf = vec![0u8; 65536];
+            let n = sock.read(&mut buf).await.unwrap();
+            tx.send(String::from_utf8_lossy(&buf[..n]).into_owned())
+                .ok();
+            sock.write_all(response.as_bytes()).await.unwrap();
+            sock.shutdown().await.ok();
+        });
+        let client = OllamaClient::new(&format!("http://{}", addr), "m").unwrap();
+        client.generate("sys", "user").await.unwrap();
+        let request = rx.await.unwrap();
+        assert!(request.contains(r#""think":false"#), "request: {request}");
+        assert!(request.contains(r#""num_ctx":4096"#), "request: {request}");
     }
 
     #[tokio::test]

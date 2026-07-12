@@ -5,7 +5,7 @@ function sx
   set -l user_prompt (string join " " $argv)
 
   set -l json (jq -n --arg m $model --arg s "$sys" --arg p "$user_prompt" \
-    '{model:$m, messages:[{role:"system",content:$s},{role:"user",content:$p}], stream:false}')
+    '{model:$m, messages:[{role:"system",content:$s},{role:"user",content:$p}], stream:false, think:false, options:{num_ctx:4096}}')
   set -l cmd (curl -s --max-time 300 "$url/api/chat" -d "$json" 2>/dev/null \
     | jq -r '.message.content // empty' | string trim | head -1 \
     | string replace -r '^```\w*' '' | string replace -r '```$' '' \
